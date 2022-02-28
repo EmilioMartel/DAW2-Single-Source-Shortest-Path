@@ -1,0 +1,36 @@
+// CREACION DE LA BASE DE DATOS
+CREATE (parque:UBICACION {name: "PARQUE"}),
+       (banco:UBICACION {name: "BANCO"}),
+       (casa:UBICACION {name: "CASA"}),
+       (colegio:UBICACION {name: "COLEGIO"}),
+       (plaza:UBICACION {name: "PLAZA"}),
+       (supermercado:UBICACION {name: "SUPERMERCADO"}),
+       (hospital:UBICACION {name: "HOSPITAL"}),
+       (parque)-[:ROAD {distance: 50}]->(banco),
+       (parque)-[:ROAD {distance: 50}]->(casa),
+       (parque)-[:ROAD {distance: 100}]->(plaza),
+       (parque)-[:ROAD {distance: 175}]->(hospital),
+       (banco)-[:ROAD {distance: 40}]->(plaza),
+       (casa)-[:ROAD {distance: 40}]->(plaza),
+       (colegio)-[:ROAD {distance: 80}]->(supermercado),
+       (plaza)-[:ROAD {distance: 30}]->(supermercado),
+       (plaza)-[:ROAD {distance: 110}]->(colegio),
+       (supermercado)-[:ROAD {distance: 80}]->(casa),
+       (hospital)-[:ROAD {distance: 185}]->(colegio);
+
+//SINGLE SHORTEST PATH
+MATCH (n:UBICACION {name: 'PARQUE'})
+CALL gds.alpha.shortestPath.deltaStepping.stream({
+  nodeProjection: 'UBICACION',
+  relationshipProjection: {
+    ROAD: {
+      type: 'ROAD',
+      properties: 'distance'
+    }
+  },
+  startNode: n,
+  relationshipWeightProperty: 'distance',
+  delta: 3.0
+})
+YIELD nodeId, distance
+RETURN gds.util.asNode(nodeId).name AS Name, distance AS cost
